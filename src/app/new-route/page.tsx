@@ -1,44 +1,15 @@
-export const createRouteAction = async (formData: FormData) => {
-  "use server";
-
-  const sourceId = formData.get("sourceId") as string;
-  const destinationId = formData.get("destinationId") as string;
-
-  const directionsResponse = await fetch(
-    `http://localhost:3000/directions?originId=${sourceId}&destinationId=${destinationId}`,
-  );
-
-  if (!directionsResponse.ok) {
-    throw new Error("Alguma coisa deu errado em directions");
-  }
-
-  const directionsData = await directionsResponse.json();
-
-  const startAddress = directionsData.routes[0].legs[0].start_address;
-  const endAddress = directionsData.routes[0].legs[0].end_address;
-
-  const response = await fetch("http://localhost:3000/routes", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      name: `${startAddress} - ${endAddress}`,
-      source_id: sourceId,
-      destination_id: destinationId,
-    }),
-  });
-
-  if (!response.ok) {
-    console.error(await response.text());
-    throw new Error("Alguma coisa deu errado em routes");
-  }
-};
+import { NewRouteForm } from "./NewRouteForm";
 
 export const searchDirections = async (source: string, destination: string) => {
   const [sourceResponse, destinationResponse] = await Promise.all([
-    fetch(`http://localhost:3000/places?text=${source}`),
-    fetch(`http://localhost:3000/places?text=${destination}`),
+    fetch(`http://localhost:3000/places?text=${source}`, {
+      // cache: "force-cache",
+      // next: { revalidate: 1 * 60 * 60 * 24 },
+    }),
+    fetch(`http://localhost:3000/places?text=${destination}`, {
+      // cache: "force-cache",
+      // next: { revalidate: 1 * 60 * 60 * 24 },
+    }),
   ]);
 
   if (!sourceResponse.ok) {
@@ -59,6 +30,10 @@ export const searchDirections = async (source: string, destination: string) => {
 
   const directionsResponse = await fetch(
     `http://localhost:3000/directions?originId=${placeSourceId}&destinationId=${placeDestinationId}`,
+    {
+      // cache: "force-cache",
+      // next: { revalidate: 1 * 60 * 60 * 24 },
+    },
   );
 
   if (!directionsResponse.ok) {
@@ -154,7 +129,7 @@ const NewRoutePage = async ({
                 {directionsData.routes[0].legs[0].duration.text}
               </li>
             </ul>
-            <form action={createRouteAction}>
+            <NewRouteForm>
               {placeSourceId && (
                 <input
                   type="hidden"
@@ -175,7 +150,7 @@ const NewRoutePage = async ({
               >
                 Criar rota
               </button>
-            </form>
+            </NewRouteForm>
           </div>
         )}
       </div>
