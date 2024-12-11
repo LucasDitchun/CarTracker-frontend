@@ -1,7 +1,7 @@
 "use client";
 
 import { PropsWithChildren, useActionState } from "react";
-import { createRouteAction } from "./create-route.action";
+import { createRouteAction } from "../_action/create-route.action";
 
 export function NewRouteForm(props: PropsWithChildren) {
   const [state, formAction] = useActionState<
